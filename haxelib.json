@@ -1,0 +1,11 @@
+{
+	"name": "prefab",
+	"url" : "https://github.com/nayata/prefab",
+	"license": "Apache",
+	"tags": ["Haxe","Heaps","Hashlink","api","editor"],
+	"description": "HEXE prefabs API for Heaps based projects",
+	"version": "0.1.0",
+	"classPath": "src/",
+	"releasenote": "Initial commit",
+	"contributors": ["nayata"]
+}
