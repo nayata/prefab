@@ -6,7 +6,12 @@ class Lib {
 	static var keepAssets:Bool = true;
 
 
-	// Load prefab and set prefab objects to `object:Dynamic` instance fields
+	/** 
+		Load the Prefab from `path` and assign all created hierarchy objects to fields of the `object` instance.
+
+		@param path Prefab name. Can point to a subfolder and must be without an extension.
+		@param object An instance to which the prefab adds itself and assigns fields from the loaded `path` hierarchy.
+	**/
 	public static function bind(path:String, object:Dynamic) {
 		var fields = Type.getInstanceFields(Type.getClass(object));
 
@@ -20,7 +25,13 @@ class Lib {
 	}
 
 
-	// Load data and create Prefab by given `type:Class<Dynamic>` Class
+	/** 
+		Create a Prefab with a given class `type`, load data from `path` and assign all created hierarchy objects to fields of this instance.
+
+		@param path Prefab name. Can point to a subfolder and must be without an extension.
+		@param type Prefab class. All objects from the loaded hierarchy will be assigned to the fields of this instance.
+		@param parent An optional parent `h2d.Object` instance to which prefab adds itself if set.
+	**/
 	public static function make(path:String, type:Class<Dynamic>, ?parent:h2d.Object):Dynamic {
 		var object = Type.createInstance(type, [parent]);
 		var fields = Type.getInstanceFields(type);
@@ -38,8 +49,14 @@ class Lib {
 	}
 
 
-	// Load Prefab
-	// Optional `field` for prefab custom values
+	/**
+		Load the Prefab with the given name `path` from the `res` folder.
+		`path` can point to a subfolder (eg: "ui/button") and must be without an extension.
+
+		@param path Prefab name.
+		@param parent An optional parent `h2d.Object` instance to which prefab adds itself if set.
+		@param field An optional `Field` structure to override default values ​​for an object in the prefab hierarchy(text, texture atlas tile. eg: "[{ name : "label", type : "text", value : "new label" }]").
+	**/
 	public static function load(path:String, ?parent:h2d.Object, ?field:Array<Field>):Prefab {
 		var prefab = new Prefab(parent);
 		prefab.hierarchy = get(path, prefab, field);
@@ -73,8 +90,8 @@ class Lib {
 			if (entry.type == "bitmap") {
 				var tile:h2d.Tile;
 
-				// 1. Bitmap tile from Texture Atlas
-				// 2. Bitmap tile from Image
+				// 1. Bitmap tile from the Texture Atlas
+				// 2. Bitmap tile from the Image
 
 				if (entry.atlas != null) {
 					if (!hxd.res.Loader.currentInstance.exists(entry.path)) throw("Could not find atlas " + entry.atlas + ".atlas");
@@ -83,7 +100,7 @@ class Lib {
 					var atlas = getAtlas(entry.path);
 					tile = atlas.get(entry.src);
 
-					// Override bitmap tile with value from field
+					// Override bitmap tile with a value from the field
 					if (field != null) {
 						for (key in field) {
 							if (key.name == entry.link && key.type == "bitmap") tile = atlas.get(key.value);
@@ -133,7 +150,7 @@ class Lib {
 
 				item.text = entry.text ?? "";
 
-				// Override text with value from field
+				// Override text with a value from the field
 				if (field != null) {
 					for (key in field) {
 						if (key.name == entry.link && key.type == "text") item.text = key.value;
@@ -176,7 +193,7 @@ class Lib {
 				object = item;
 			}
 
-			// Linked Prefab with fields
+			// Linked Prefab with a fields
 			if (entry.type == "prefab") {
 				if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find Prefab file " + entry.src);
 
@@ -190,10 +207,10 @@ class Lib {
 
 			if (object == null) continue;
 
-			// Set object name
+			// Set the object name
 			object.name = entry.link;
 
-			// Set object transform
+			// Set the object transform
 			object.x = entry.x ?? 0;
 			object.y = entry.y ?? 0;
 
@@ -202,7 +219,7 @@ class Lib {
 
 			object.rotation = entry.rotation ?? 0;
 
-			// Set display options
+			// Set the object display options
 			if (entry.blendMode != null) object.blendMode = haxe.EnumTools.createByName(h2d.BlendMode, entry.blendMode);
 			object.visible = entry.visible ?? true;
 			object.alpha = entry.alpha ?? 1;
@@ -218,7 +235,7 @@ class Lib {
 
 
 
-	// Load or get Texture Atlas
+	// Load or get the Texture Atlas
 	static function getAtlas(path:String):hxd.res.Atlas {
 		var name = getName(path);
 
@@ -233,7 +250,7 @@ class Lib {
 	}
 
 
-	// Name from Path
+	// Name from the Path
 	static inline function getName(path:String):String {
 		return haxe.io.Path.withoutDirectory(path).split(".").shift();
 	}
