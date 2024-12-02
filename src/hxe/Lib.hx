@@ -137,8 +137,9 @@ class Lib {
 				item.smooth = true;
 
 				if (entry.color != null) item.textColor = entry.color;
-				if (entry.width != null) item.maxWidth = entry.width;
+				if (entry.width != null) item.letterSpacing = entry.width;
 				if (entry.height != null) item.lineSpacing = entry.height;
+				if (entry.range != null) item.maxWidth = entry.range;
 
 				if (entry.align != null) {
 					switch (entry.align) {
@@ -299,6 +300,7 @@ typedef Data = {
 
 	@:optional var color : Int;
 	@:optional var align : Int;
+	@:optional var range : Int;
 
 	@:optional var text : String;
 	@:optional var atlas : String;
