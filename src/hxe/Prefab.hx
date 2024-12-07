@@ -16,7 +16,7 @@ class Prefab extends h2d.Object {
 	/**
 		Get an object from the prefab hierarchy with the given name `n`.
 	**/
-	public function get(n:String) {
+	public function get<T>(n:String):Null<T> {
 		return hierarchy.get(n);
 	}
 
