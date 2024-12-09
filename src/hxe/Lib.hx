@@ -125,6 +125,34 @@ class Lib {
 				object = item;
 			}
 
+
+			// 9-Slice ScaleGrid
+			if (entry.type == "scalegrid") {
+				var tile:h2d.Tile;
+
+				if (entry.atlas != null) {
+					if (!hxd.res.Loader.currentInstance.exists(entry.path)) throw("Could not find atlas " + entry.atlas + ".atlas");
+					var atlas = getAtlas(entry.path);
+					tile = atlas.get(entry.src);
+				}
+				else {
+					if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find image " + entry.src);
+					tile = hxd.Res.load(entry.src).toImage().toTile();
+				}
+
+				var size = entry.range ?? 10;
+				var item = new h2d.ScaleGrid(tile, size, size);
+
+				item.width = entry.width;
+				item.height = entry.height;
+
+				if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
+
+				hierarchy.set(entry.link, item);
+				childrens.set(entry.name, item);
+				object = item;
+			}
+
 			// Text
 			if (entry.type == "text") {
 				var font = hxd.res.DefaultFont.get();
@@ -188,6 +216,15 @@ class Lib {
 				item.beginFill(c);
 				item.drawRect(0, 0, w, h);
 				item.endFill();
+
+				hierarchy.set(entry.link, item);
+				childrens.set(entry.name, item);
+				object = item;
+			}
+
+			// Mask
+			if (entry.type == "mask") {
+				var item = new h2d.Mask(Std.int(entry.width), Std.int(entry.height));
 
 				hierarchy.set(entry.link, item);
 				childrens.set(entry.name, item);
@@ -262,7 +299,7 @@ class Lib {
 	}
 
 
-	public static function cleanCache() {
+	public static function clearCache() {
 		cache = new Map();
 	}
 }
