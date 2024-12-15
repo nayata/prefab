@@ -125,7 +125,6 @@ class Lib {
 				object = item;
 			}
 
-
 			// 9-Slice ScaleGrid
 			if (entry.type == "scalegrid") {
 				var tile:h2d.Tile;
@@ -145,6 +144,42 @@ class Lib {
 
 				item.width = entry.width;
 				item.height = entry.height;
+
+				if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
+
+				hierarchy.set(entry.link, item);
+				childrens.set(entry.name, item);
+				object = item;
+			}
+
+			// Anim
+			if (entry.type == "anim") {
+				var tiles:Array<h2d.Tile> = [];
+
+				if (entry.atlas != null) {
+					if (!hxd.res.Loader.currentInstance.exists(entry.path)) throw("Could not find atlas " + entry.atlas + ".atlas");
+					var atlas = getAtlas(entry.path);
+					tiles = atlas.getAnim(entry.src);
+					for (t in tiles) t.setCenterRatio(0.5, 0.5);
+				}
+				else {
+					if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find image " + entry.src);
+					var tile = hxd.Res.load(entry.src).toImage().toTile();
+
+					var row = Std.int(entry.width);
+					var col = Std.int(entry.height);
+					var w = Std.int(tile.width / row);
+					var h = Std.int(tile.height / col);
+			
+					for (y in 0...col) {    
+						for (x in 0...row) {
+							tiles.push( tile.sub(x * w, y * h, w, h, -(w / 2), -(h / 2)) );
+						}
+					}
+				}
+
+				var item = new h2d.Anim(tiles, entry.speed);
+				item.pause = entry.loop == 0 ? true : false;
 
 				if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
 
@@ -315,6 +350,8 @@ typedef Data = {
 	@:optional var children : Array<Data>;
 	@:optional var parent : String;
 
+	@:optional var field : Array<Field>;
+
 	@:optional var x : Float;
 	@:optional var y : Float;
 	@:optional var scaleX : Float;
@@ -339,10 +376,11 @@ typedef Data = {
 	@:optional var align : Int;
 	@:optional var range : Int;
 
+	@:optional var speed : Int;
+	@:optional var loop : Int;
+
 	@:optional var text : String;
 	@:optional var atlas : String;
 	@:optional var font : String;
 	@:optional var path : String;
-
-	@:optional var field : Array<Field>;
 }
