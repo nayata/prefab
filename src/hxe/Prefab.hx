@@ -36,11 +36,11 @@ class Prefab extends h2d.Object {
 	}
 
 
-	/**
-		1: Check if the prefab matches the given class `c`.
-		2: Converts the prefab to another `c` prefab class.
-	**/
+	/** Check if the prefab matches the given class `c`. **/
 	public function is<T:Prefab>(c:Class<T>) return Std.isOfType(this, c);
+
+	
+	/** Converts the prefab to another `c` prefab class. **/
 	public function as<T:Prefab>(c:Class<T>) : T return Std.downcast(this, c);
 
 

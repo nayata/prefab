@@ -2,8 +2,8 @@ package hxe;
 
 
 class Lib {
-	static var cache:Map<String, hxd.res.Atlas> = new Map();
-	static var keepAssets:Bool = true;
+	static var asset:Map<String, hxd.res.Atlas> = new Map();
+	static var cache:Map<String, Data> = new Map();
 
 
 	/** 
@@ -59,6 +59,7 @@ class Lib {
 	**/
 	public static function load(path:String, ?parent:h2d.Object, ?field:Array<Field>):Prefab {
 		var prefab = new Prefab(parent);
+		
 		prefab.hierarchy = get(path, prefab, field);
 		prefab.name = getName(path);
 
@@ -66,216 +67,230 @@ class Lib {
 	}
 
 
-	// Load hierarchy and create objects
-	static function get(path:String, parent:h2d.Object, ?field:Array<Field>):Map<String, h2d.Object> {
+	/**
+		Get json `Data` of the Prefab with the given name `path` from the `res` folder.
+
+		@param path Prefab name.
+	**/
+	public static function read(path:String):Data {
+		if (cache.exists(path)) return cache.get(path);
+
 		var raw = hxd.Res.load(path + ".prefab");
 		var res:Data = haxe.Json.parse(raw.entry.getText());
+
+		cache.set(path, res);
+
+		return res;
+	}
+
+
+	// Load hierarchy and create objects
+	static function get(path:String, parent:h2d.Object, ?field:Array<Field>):Map<String, h2d.Object> {
+		var res = read(path);
 
 		var hierarchy:Map<String, h2d.Object> = new Map();
 		var childrens:Map<String, h2d.Object> = new Map();
 
 		for (entry in res.children) {
-			var object:h2d.Object = null;
+			var object:Null<h2d.Object> = null;
 
-			// Object
-			if (entry.type == "object") {
-				var item = new h2d.Object();
+			switch (entry.type) {
+				case "object" :
+					var item = new h2d.Object();
 
-				hierarchy.set(entry.link, item);
-				childrens.set(entry.name, item);
-				object = item;
-			}
+					hierarchy.set(entry.link, item);
+					childrens.set(entry.name, item);
 
-			// Bitmap
-			if (entry.type == "bitmap") {
-				var tile:h2d.Tile;
+					object = item;
 
-				// 1. Bitmap tile from the Texture Atlas
-				// 2. Bitmap tile from the Image
+				case "bitmap" :
+					var tile:h2d.Tile;
 
-				if (entry.atlas != null) {
-					if (!hxd.res.Loader.currentInstance.exists(entry.path)) throw("Could not find atlas " + entry.atlas + ".atlas");
+					// Tile from the Texture Atlas or Tile from the Image
+					if (entry.atlas != null) {
+						if (!hxd.res.Loader.currentInstance.exists(entry.path)) throw("Could not find atlas " + entry.atlas + ".atlas");
 
-					// Load and store Texture Atlas
-					var atlas = getAtlas(entry.path);
-					tile = atlas.get(entry.src);
+						// Load and store Texture Atlas
+						var atlas = getAtlas(entry.path);
+						tile = atlas.get(entry.src);
 
-					// Override bitmap tile with a value from the field
+						// Override bitmap tile with a value from the field
+						if (field != null) {
+							for (key in field) {
+								if (key.name == entry.link && key.type == "bitmap") tile = atlas.get(key.value);
+							}
+						}
+					}
+					else {
+						if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find image " + entry.src);
+						tile = hxd.Res.load(entry.src).toImage().toTile();
+					}
+
+					var item = new h2d.Bitmap(tile);
+
+					if (entry.width != null) item.width = entry.width;
+					if (entry.height != null) item.height = entry.height;
+
+					if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
+					if (entry.dx != null) item.tile.setCenterRatio(entry.dx, entry.dy);
+
+					hierarchy.set(entry.link, item);
+					childrens.set(entry.name, item);
+
+					object = item;
+
+				case "scalegrid" :
+					var tile:h2d.Tile;
+
+					if (entry.atlas != null) {
+						if (!hxd.res.Loader.currentInstance.exists(entry.path)) throw("Could not find atlas " + entry.atlas + ".atlas");
+
+						var atlas = getAtlas(entry.path);
+						tile = atlas.get(entry.src);
+					}
+					else {
+						if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find image " + entry.src);
+						tile = hxd.Res.load(entry.src).toImage().toTile();
+					}
+
+					var size = entry.range ?? 10;
+					var item = new h2d.ScaleGrid(tile, size, size);
+
+					item.width = entry.width;
+					item.height = entry.height;
+
+					if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
+
+					hierarchy.set(entry.link, item);
+					childrens.set(entry.name, item);
+
+					object = item;
+
+				case "anim" :
+					var tiles:Array<h2d.Tile> = [];
+
+					if (entry.atlas != null) {
+						if (!hxd.res.Loader.currentInstance.exists(entry.path)) throw("Could not find atlas " + entry.atlas + ".atlas");
+
+						var atlas = getAtlas(entry.path);
+						tiles = atlas.getAnim(entry.src);
+
+						for (t in tiles) t.setCenterRatio(0.5, 0.5);
+					}
+					else {
+						if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find image " + entry.src);
+
+						var tile = hxd.Res.load(entry.src).toImage().toTile();
+
+						var row = Std.int(entry.width);
+						var col = Std.int(entry.height);
+						var w = Std.int(tile.width / row);
+						var h = Std.int(tile.height / col);
+				
+						for (y in 0...col) {    
+							for (x in 0...row) {
+								tiles.push( tile.sub(x * w, y * h, w, h, -(w / 2), -(h / 2)) );
+							}
+						}
+					}
+
+					var item = new h2d.Anim(tiles, entry.speed);
+					item.pause = entry.loop == 0 ? true : false;
+
+					if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
+
+					hierarchy.set(entry.link, item);
+					childrens.set(entry.name, item);
+
+					object = item;
+
+				case "text" :
+					var font = hxd.res.DefaultFont.get();
+
+					if (entry.font != null) {
+						if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find Font file " + entry.src);
+						font = hxd.Res.load(entry.src).to(hxd.res.BitmapFont).toFont();
+					}
+
+					var item = new h2d.Text(font);
+					item.smooth = true;
+
+					if (entry.color != null) item.textColor = entry.color;
+					if (entry.width != null) item.letterSpacing = entry.width;
+					if (entry.height != null) item.lineSpacing = entry.height;
+					if (entry.range != null) item.maxWidth = entry.range;
+
+					if (entry.align != null) {
+						switch (entry.align) {
+							case 1 : item.textAlign = Center;
+							case 2 : item.textAlign = Right;
+							default : item.textAlign = Left;
+						}
+					}
+
+					item.text = entry.text ?? "";
+
+					// Override text with a value from the field
 					if (field != null) {
 						for (key in field) {
-							if (key.name == entry.link && key.type == "bitmap") tile = atlas.get(key.value);
+							if (key.name == entry.link && key.type == "text") item.text = key.value;
 						}
 					}
-				}
-				else {
-					if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find image " + entry.src);
-					tile = hxd.Res.load(entry.src).toImage().toTile();
-				}
 
-				var item = new h2d.Bitmap(tile);
+					hierarchy.set(entry.link, item);
+					childrens.set(entry.name, item);
 
-				if (entry.width != null) item.width = entry.width;
-				if (entry.height != null) item.height = entry.height;
+					object = item;
 
-				if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
-				if (entry.dx != null) item.tile.setCenterRatio(entry.dx, entry.dy);
+				case "interactive" :
+					var item = new h2d.Interactive(128, 128);
 
-				hierarchy.set(entry.link, item);
-				childrens.set(entry.name, item);
-				object = item;
-			}
+					item.width = Std.int(entry.width);
+					item.height = Std.int(entry.height);
 
-			// 9-Slice ScaleGrid
-			if (entry.type == "scalegrid") {
-				var tile:h2d.Tile;
+					if (entry.smooth != null) item.isEllipse = true;
 
-				if (entry.atlas != null) {
-					if (!hxd.res.Loader.currentInstance.exists(entry.path)) throw("Could not find atlas " + entry.atlas + ".atlas");
-					var atlas = getAtlas(entry.path);
-					tile = atlas.get(entry.src);
-				}
-				else {
-					if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find image " + entry.src);
-					tile = hxd.Res.load(entry.src).toImage().toTile();
-				}
+					hierarchy.set(entry.link, item);
+					childrens.set(entry.name, item);
 
-				var size = entry.range ?? 10;
-				var item = new h2d.ScaleGrid(tile, size, size);
+					object = item;
 
-				item.width = entry.width;
-				item.height = entry.height;
+				case "graphics" :
+					var item = new h2d.Graphics();
 
-				if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
+					var c = entry.color ?? 0xFFFFFF;
+					var w = entry.width ?? 128;
+					var h = entry.height ?? 128;
 
-				hierarchy.set(entry.link, item);
-				childrens.set(entry.name, item);
-				object = item;
-			}
+					item.beginFill(c);
+					item.drawRect(0, 0, w, h);
+					item.endFill();
 
-			// Anim
-			if (entry.type == "anim") {
-				var tiles:Array<h2d.Tile> = [];
+					hierarchy.set(entry.link, item);
+					childrens.set(entry.name, item);
 
-				if (entry.atlas != null) {
-					if (!hxd.res.Loader.currentInstance.exists(entry.path)) throw("Could not find atlas " + entry.atlas + ".atlas");
-					var atlas = getAtlas(entry.path);
-					tiles = atlas.getAnim(entry.src);
-					for (t in tiles) t.setCenterRatio(0.5, 0.5);
-				}
-				else {
-					if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find image " + entry.src);
-					var tile = hxd.Res.load(entry.src).toImage().toTile();
+					object = item;
 
-					var row = Std.int(entry.width);
-					var col = Std.int(entry.height);
-					var w = Std.int(tile.width / row);
-					var h = Std.int(tile.height / col);
-			
-					for (y in 0...col) {    
-						for (x in 0...row) {
-							tiles.push( tile.sub(x * w, y * h, w, h, -(w / 2), -(h / 2)) );
-						}
-					}
-				}
+				case "mask" :
+					var item = new h2d.Mask(Std.int(entry.width), Std.int(entry.height));
 
-				var item = new h2d.Anim(tiles, entry.speed);
-				item.pause = entry.loop == 0 ? true : false;
+					hierarchy.set(entry.link, item);
+					childrens.set(entry.name, item);
+					
+					object = item;
 
-				if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
+				case "prefab" :
+					if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find Prefab file " + entry.src);
 
-				hierarchy.set(entry.link, item);
-				childrens.set(entry.name, item);
-				object = item;
-			}
+					var path = entry.src.split(".").shift();
+					var item = load(path, object, entry.field);
 
-			// Text
-			if (entry.type == "text") {
-				var font = hxd.res.DefaultFont.get();
-				if (entry.font != null) {
-					if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find Font file " + entry.src);
-					font = hxd.Res.load(entry.src).to(hxd.res.BitmapFont).toFont();
-				}
+					hierarchy.set(entry.link, item);
+					childrens.set(entry.name, item);
 
-				var item = new h2d.Text(font);
-				item.smooth = true;
+					object = item;
 
-				if (entry.color != null) item.textColor = entry.color;
-				if (entry.width != null) item.letterSpacing = entry.width;
-				if (entry.height != null) item.lineSpacing = entry.height;
-				if (entry.range != null) item.maxWidth = entry.range;
-
-				if (entry.align != null) {
-					switch (entry.align) {
-						case 1 : item.textAlign = Center;
-						case 2 : item.textAlign = Right;
-						default : item.textAlign = Left;
-					}
-				}
-
-				item.text = entry.text ?? "";
-
-				// Override text with a value from the field
-				if (field != null) {
-					for (key in field) {
-						if (key.name == entry.link && key.type == "text") item.text = key.value;
-					}
-				}
-
-				hierarchy.set(entry.link, item);
-				childrens.set(entry.name, item);
-				object = item;
-			}
-
-			// Interactive
-			if (entry.type == "interactive") {
-				var item = new h2d.Interactive(128, 128);
-
-				item.width = Std.int(entry.width);
-				item.height = Std.int(entry.height);
-
-				if (entry.smooth != null) item.isEllipse = true;
-
-				hierarchy.set(entry.link, item);
-				childrens.set(entry.name, item);
-				object = item;
-			}
-
-			// Graphics
-			if (entry.type == "graphics") {
-				var item = new h2d.Graphics();
-
-				var c = entry.color ?? 0xFFFFFF;
-				var w = entry.width ?? 128;
-				var h = entry.height ?? 128;
-
-				item.beginFill(c);
-				item.drawRect(0, 0, w, h);
-				item.endFill();
-
-				hierarchy.set(entry.link, item);
-				childrens.set(entry.name, item);
-				object = item;
-			}
-
-			// Mask
-			if (entry.type == "mask") {
-				var item = new h2d.Mask(Std.int(entry.width), Std.int(entry.height));
-
-				hierarchy.set(entry.link, item);
-				childrens.set(entry.name, item);
-				object = item;
-			}
-
-			// Linked Prefab with a fields
-			if (entry.type == "prefab") {
-				if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find Prefab file " + entry.src);
-
-				var path = entry.src.split(".").shift();
-				var item = load(path, object, entry.field);
-
-				hierarchy.set(entry.link, item);
-				childrens.set(entry.name, item);
-				object = item;
+				default:
 			}
 
 			if (object == null) continue;
@@ -294,9 +309,9 @@ class Lib {
 
 			// Set the object display options
 			if (entry.blendMode != null) object.blendMode = haxe.EnumTools.createByName(h2d.BlendMode, entry.blendMode);
+
 			object.visible = entry.visible ?? true;
 			object.alpha = entry.alpha ?? 1;
-
 
 			// Place object
 			var p:h2d.Object = entry.parent != null ? childrens.get(entry.parent) : parent;
@@ -307,34 +322,34 @@ class Lib {
 	}
 
 
-
 	// Load or get the Texture Atlas
-	static function getAtlas(path:String):hxd.res.Atlas {
+	public static function getAtlas(path:String):hxd.res.Atlas {
 		var name = getName(path);
 
-		// Already loaded
-		if (cache.exists(name)) return cache.get(name);
+		if (asset.exists(name)) return asset.get(name);
 
-		// Load and save
 		var atlas = hxd.Res.load(path).to(hxd.res.Atlas);
-		cache.set(name, atlas);
+		asset.set(name, atlas);
 
 		return atlas;
 	}
 
 
-	// Name from the Path
+	// Add the Texture Atlas to cache
+	public static function setAtlas(atlas:hxd.res.Atlas) {
+		asset.set(getName(atlas.name), atlas);
+	}
+
+
+	// Get name from the Path
 	static inline function getName(path:String):String {
 		return haxe.io.Path.withoutDirectory(path).split(".").shift();
 	}
 
 
-	public static function setCache(atlas:hxd.res.Atlas) {
-		cache.set(getName(atlas.name), atlas);
-	}
-
-
-	public static function clearCache() {
+	// Clear cache
+	public static function clear() {
+		asset = new Map();
 		cache = new Map();
 	}
 }
@@ -357,18 +372,17 @@ typedef Data = {
 	@:optional var scaleX : Float;
 	@:optional var scaleY : Float;
 	@:optional var rotation : Float;
+	@:optional var alpha : Float;
 
 	@:optional var blendMode : String;
 	@:optional var visible : Bool;
-	@:optional var alpha : Float;
+	@:optional var smooth : Int;
 
 	@:optional var src : String;
 
 	@:optional var width : Float;
 	@:optional var height : Float;
 
-	@:optional var smooth : Int;
-	
 	@:optional var dx : Float;
 	@:optional var dy : Float;
 
