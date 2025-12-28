@@ -4,18 +4,22 @@ class Prefab extends h2d.Object {
 	@:allow(hxe.Lib) var hierarchy:Map<String, h2d.Object> = new Map();
 
 
-	public function new(?prefab:String, ?parent:h2d.Object) {
+	public function new(?prefab:String, ?parent:h2d.Object, ?fields:Array<hxe.Lib.Field>) {
 		super(parent);
 
 		if (prefab != null) {
-			hxe.Lib.make(prefab, this);
+			hxe.Lib.make(prefab, this, fields);
+			init();
 		}
 	}
 
 
-	/** Updates the object from the outside with the given delta time. **/
-	public function update(dt:Float) {
-	}
+	/** Initialize the prefab after instantiation. **/
+	public function init() {}
+
+
+	/** Update the prefab from the outside with the given delta time. **/
+	public function update(dt:Float) {}
 
 
 	/**

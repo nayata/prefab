@@ -35,8 +35,8 @@ class Lib {
 		@param path Prefab name. Can point to a subfolder and must be without an extension.
 		@param object An existing Prefab instance to initialize and populate with the loaded hierarchy.
 	**/
-	public static function make(path:String, object:Prefab):Prefab {
-		object.hierarchy = get(path, (cast object : h2d.Object));
+	public static function make(path:String, object:Prefab, ?field:Array<Field>):Prefab {
+		object.hierarchy = get(path, (cast object : h2d.Object), field);
 		object.name = getName(path);
 
 		var fields = Type.getInstanceFields(Type.getClass(object));
@@ -291,7 +291,7 @@ class Lib {
 						var type = Type.resolveClass(entry.path);
 						if (type == null) throw 'Class not found: $type';
 
-						item = Type.createInstance(type, [path, parent]);
+						item = Type.createInstance(type, [path, parent, entry.field]);
 					}
 					else {
 						item = load(path, object, entry.field);
