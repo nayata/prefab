@@ -26,18 +26,20 @@ class Lib {
 
 
 	/** 
-		Create a Prefab with a given class `type`, load data from `path` and assign all created hierarchy objects to fields of this instance.
+		Initializes an existing Prefab instance by loading a hierarchy from the given path
+		and attaching all loaded objects as children of this prefab.
+
+		The loaded hierarchy is stored in the `hierarchy` field, and any objects whose names
+ 		match fields of this Prefab instance are automatically assigned to those fields.
 
 		@param path Prefab name. Can point to a subfolder and must be without an extension.
-		@param type Prefab class. All objects from the loaded hierarchy will be assigned to the fields of this instance.
-		@param parent An optional parent `h2d.Object` instance to which prefab adds itself if set.
+		@param object An existing Prefab instance to initialize and populate with the loaded hierarchy.
 	**/
-	public static function make(path:String, type:Class<Dynamic>, ?parent:h2d.Object):Dynamic {
-		var object = Type.createInstance(type, [parent]);
-		var fields = Type.getInstanceFields(type);
-
+	public static function make(path:String, object:Prefab):Prefab {
 		object.hierarchy = get(path, (cast object : h2d.Object));
 		object.name = getName(path);
+
+		var fields = Type.getInstanceFields(Type.getClass(object));
 
 		for (field in fields) {
 			if (object.hierarchy.exists(field)) {
@@ -283,7 +285,17 @@ class Lib {
 					if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find Prefab file " + entry.src);
 
 					var path = entry.src.split(".").shift();
-					var item = load(path, object, entry.field);
+					var item:Prefab;
+
+					if (entry.path != null) {
+						var type = Type.resolveClass(entry.path);
+						if (type == null) throw 'Class not found: $type';
+
+						item = Type.createInstance(type, [path, parent]);
+					}
+					else {
+						item = load(path, object, entry.field);
+					}
 
 					hierarchy.set(entry.link, item);
 					childrens.set(entry.name, item);

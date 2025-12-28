@@ -1,23 +1,41 @@
 package hxe;
 
-
 class Prefab extends h2d.Object {
-	@:allow(hxe.Lib) var hierarchy:Map<String, Dynamic> = new Map();
+	@:allow(hxe.Lib) var hierarchy:Map<String, h2d.Object> = new Map();
 
 
-	/**
-		Check if the prefab has a object in the hierarchy with the given `n` name.
-	**/
-	public function has(n:String):Bool {
-		return hierarchy.exists(n);
+	public function new(?prefab:String, ?parent:h2d.Object) {
+		super(parent);
+
+		if (prefab != null) {
+			hxe.Lib.make(prefab, this);
+		}
+	}
+
+
+	/** Updates the object from the outside with the given delta time. **/
+	public function update(dt:Float) {
 	}
 
 
 	/**
-		Get an object from the prefab hierarchy with the given name `n`.
+		Get an object from the prefab hierarchy by name.
+
+		If the optional class `c` is provided, the returned object is verified to be of that type,
+		returning null if it does not match. If `c` is not provided, the object is returned directly(unsafe cast).
+
+		@param n Name of the object in the hierarchy
+		@param c Optional class to enforce type checking
 	**/
-	public function get<T>(n:String):Null<T> {
-		return hierarchy.get(n);
+	public function get<T:h2d.Object>(n:String, ?c:Class<T>):Null<T> {
+		var obj = hierarchy.get(n);
+		if (obj == null) return null;
+	
+		if (c == null) {
+			return cast obj;
+		}
+	
+		return Std.isOfType(obj, c) ? cast obj : null;
 	}
 
 
@@ -25,7 +43,7 @@ class Prefab extends h2d.Object {
 		Find all objects of the given class `c` in the prefab hierarchy.
 		@param all An optional array instance to fill results with. Allocates a new array if not set.
 	**/
-	public function getAll<T:h2d.Object>(c:Class<T>, ?all:Array<T>):Array<T> {
+	public function all<T:h2d.Object>(c:Class<T>, ?all:Array<T>):Array<T> {
 		if (all == null) all = [];
 		
 		for (o in hierarchy) {
@@ -36,17 +54,19 @@ class Prefab extends h2d.Object {
 	}
 
 
+	/** Check if the prefab has a object in the hierarchy with the given `n` name. **/
+	public function has(n:String):Bool return hierarchy.exists(n);
+
+
 	/** Check if the prefab matches the given class `c`. **/
-	public function is<T:Prefab>(c:Class<T>) return Std.isOfType(this, c);
+	public function is<T:Prefab>(c:Class<T>):Bool return Std.isOfType(this, c);
 
 	
 	/** Converts the prefab to another `c` prefab class. **/
-	public function as<T:Prefab>(c:Class<T>) : T return Std.downcast(this, c);
+	public function as<T:Prefab>(c:Class<T>):T return Std.downcast(this, c);
 
 
-	/**
-		Get the class name of the object from the prefab hierarchy with the given name `n`.
-	**/
+	/** Get the class name of the object from the prefab hierarchy with the given name `n`. **/
 	public function typeof(n:String):String {
 		if (!hierarchy.exists(n)) return "Object not found";
 		
