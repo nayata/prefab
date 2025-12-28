@@ -287,9 +287,9 @@ class Lib {
 					var path = entry.src.split(".").shift();
 					var item:Prefab;
 
-					if (entry.path != null) {
+					if (entry.path != null && entry.path != "Prefab") {
 						var type = Type.resolveClass(entry.path);
-						if (type == null) throw 'Class not found: $type';
+						if (type == null) throw 'Class not found: ' + entry.path;
 
 						item = Type.createInstance(type, [path, parent, entry.field]);
 					}
