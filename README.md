@@ -30,6 +30,12 @@ Use `hxe.Lib` to load and add a prefab instance to the scene. Note: the prefab n
 var object:hxe.Prefab = hxe.Lib.load("myPrefab", s2d);
 ```
 
+Or create prefab directly:
+
+```haxe
+var object = new Prefab("myPrefab", s2d);
+```
+
 
 # Documentation
 
