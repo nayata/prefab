@@ -409,4 +409,8 @@ typedef Data = {
 	@:optional var atlas : String;
 	@:optional var font : String;
 	@:optional var path : String;
+
+	@:optional var body : Int;
+	@:optional var shape : Int;
+	@:optional var mode : Int;
 }
