@@ -4,11 +4,19 @@ class Prefab extends h2d.Object {
 	@:allow(hxe.Lib) var hierarchy:Map<String, h2d.Object> = new Map();
 
 
-	public function new(?prefab:String, ?parent:h2d.Object, ?fields:Array<hxe.Lib.Field>) {
+	/** 
+		Creates a `Prefab` instance and loads its visual content from the prefab file at the specified `path`.
+		The created objects are instantiated and attached to this prefab’s `hierarchy` using `hxe.Lib.make`.
+
+		@param path Prefab file name. Can point to a subfolder and must be specified without an extension.
+		@param parent An optional parent `h2d.Object` instance to which the prefab adds itself, if set.
+		@param fields An optional `hxe.Lib.Field` structure used to override default values for objects in the prefab hierarchy.
+	**/
+	public function new(?path:String, ?parent:h2d.Object, ?fields:Array<hxe.Lib.Field>) {
 		super(parent);
 
-		if (prefab != null) {
-			hxe.Lib.make(prefab, this, fields);
+		if (path != null) {
+			hxe.Lib.make(path, this, fields);
 			init();
 		}
 	}

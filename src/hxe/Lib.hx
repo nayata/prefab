@@ -33,9 +33,10 @@ class Lib {
  		match fields of this Prefab instance are automatically assigned to those fields.
 
 		@param path Prefab name. Can point to a subfolder and must be without an extension.
-		@param object An existing Prefab instance to initialize and populate with the loaded hierarchy.
+		@param object An existing `Prefab` instance to initialize and populate with the loaded hierarchy.
+		@param field An optional `Field` structure to override default values ​​for an object in the prefab hierarchy.
 	**/
-	public static function make(path:String, object:Prefab, ?field:Array<Field>):Prefab {
+	public static function make(path:String, object:Prefab, ?field:Array<Field>) {
 		object.hierarchy = get(path, (cast object : h2d.Object), field);
 		object.name = getName(path);
 
@@ -46,8 +47,6 @@ class Lib {
 				Reflect.setField(object, field, object.hierarchy.get(field));
 			}
 		}
-
-		return object;
 	}
 
 
