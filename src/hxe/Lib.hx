@@ -249,7 +249,7 @@ class Lib {
 					item.width = Std.int(entry.width);
 					item.height = Std.int(entry.height);
 
-					if (entry.smooth != null) item.isEllipse = true;
+					if (entry.mode != null) item.isEllipse = true;
 
 					hierarchy.set(entry.link, item);
 					childrens.set(entry.name, item);
