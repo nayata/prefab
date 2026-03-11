@@ -131,9 +131,9 @@ class Lib {
 
 					if (entry.width != null) item.width = entry.width;
 					if (entry.height != null) item.height = entry.height;
-
-					if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
 					if (entry.dx != null) item.tile.setCenterRatio(entry.dx, entry.dy);
+
+					item.smooth = entry.smooth ?? false;
 
 					hierarchy.set(entry.link, item);
 					childrens.set(entry.name, item);
@@ -160,7 +160,7 @@ class Lib {
 					item.width = entry.width;
 					item.height = entry.height;
 
-					if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
+					item.smooth = entry.smooth ?? false;
 
 					hierarchy.set(entry.link, item);
 					childrens.set(entry.name, item);
@@ -196,9 +196,9 @@ class Lib {
 					}
 
 					var item = new h2d.Anim(tiles, entry.speed);
-					item.pause = entry.loop == 0 ? true : false;
+					item.pause = entry.loop ? false : true;
 
-					if (entry.smooth != null) item.smooth = entry.smooth == 1 ? true : false;
+					item.smooth = entry.smooth ?? false;
 
 					hierarchy.set(entry.link, item);
 					childrens.set(entry.name, item);
@@ -387,7 +387,7 @@ typedef Data = {
 
 	@:optional var blendMode : String;
 	@:optional var visible : Bool;
-	@:optional var smooth : Int;
+	@:optional var smooth : Bool;
 
 	@:optional var src : String;
 
@@ -402,7 +402,7 @@ typedef Data = {
 	@:optional var range : Int;
 
 	@:optional var speed : Int;
-	@:optional var loop : Int;
+	@:optional var loop : Bool;
 
 	@:optional var text : String;
 	@:optional var atlas : String;
