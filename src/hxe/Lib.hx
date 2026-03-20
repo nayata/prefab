@@ -324,6 +324,9 @@ class Lib {
 			object.visible = entry.visible ?? true;
 			object.alpha = entry.alpha ?? 1;
 
+			// Set the object filters
+			if (entry.filter != null) object.filter = Filter.from(entry.filter);
+
 			// Place object
 			var p:h2d.Object = entry.parent != null ? childrens.get(entry.parent) : parent;
 			p.addChild(object);
@@ -367,6 +370,7 @@ class Lib {
 
 
 typedef Field = { name : String, type : String, value : String };
+typedef Entry = { name : String, prop : Dynamic };
 
 typedef Data = {
 	var name : String;
@@ -377,6 +381,7 @@ typedef Data = {
 	@:optional var parent : String;
 
 	@:optional var field : Array<Field>;
+	@:optional var filter : Array<Entry>;
 
 	@:optional var x : Float;
 	@:optional var y : Float;
