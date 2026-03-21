@@ -74,6 +74,8 @@ class Lib {
 		@param path Prefab name.
 	**/
 	public static function read(path:String):Data {
+		path = StringTools.replace(path, ".prefab", "");
+		
 		if (cache.exists(path)) return cache.get(path);
 
 		var raw = hxd.Res.load(path + ".prefab");
@@ -99,8 +101,8 @@ class Lib {
 				case "object" :
 					var item = new h2d.Object();
 
-					hierarchy.set(entry.link, item);
-					childrens.set(entry.name, item);
+					hierarchy.set(entry.name, item);
+					childrens.set(entry.link, item);
 
 					object = item;
 
@@ -118,7 +120,7 @@ class Lib {
 						// Override bitmap tile with a value from the field
 						if (field != null) {
 							for (key in field) {
-								if (key.name == entry.link && key.type == "bitmap") tile = atlas.get(key.value);
+								if (key.name == entry.name && key.type == "bitmap") tile = atlas.get(key.value);
 							}
 						}
 					}
@@ -135,8 +137,8 @@ class Lib {
 
 					item.smooth = entry.smooth ?? false;
 
-					hierarchy.set(entry.link, item);
-					childrens.set(entry.name, item);
+					hierarchy.set(entry.name, item);
+					childrens.set(entry.link, item);
 
 					object = item;
 
@@ -162,8 +164,8 @@ class Lib {
 
 					item.smooth = entry.smooth ?? false;
 
-					hierarchy.set(entry.link, item);
-					childrens.set(entry.name, item);
+					hierarchy.set(entry.name, item);
+					childrens.set(entry.link, item);
 
 					object = item;
 
@@ -200,8 +202,8 @@ class Lib {
 
 					item.smooth = entry.smooth ?? false;
 
-					hierarchy.set(entry.link, item);
-					childrens.set(entry.name, item);
+					hierarchy.set(entry.name, item);
+					childrens.set(entry.link, item);
 
 					object = item;
 
@@ -234,12 +236,12 @@ class Lib {
 					// Override text with a value from the field
 					if (field != null) {
 						for (key in field) {
-							if (key.name == entry.link && key.type == "text") item.text = key.value;
+							if (key.name == entry.name && key.type == "text") item.text = key.value;
 						}
 					}
 
-					hierarchy.set(entry.link, item);
-					childrens.set(entry.name, item);
+					hierarchy.set(entry.name, item);
+					childrens.set(entry.link, item);
 
 					object = item;
 
@@ -251,8 +253,8 @@ class Lib {
 
 					if (entry.mode != null) item.isEllipse = true;
 
-					hierarchy.set(entry.link, item);
-					childrens.set(entry.name, item);
+					hierarchy.set(entry.name, item);
+					childrens.set(entry.link, item);
 
 					object = item;
 
@@ -267,16 +269,16 @@ class Lib {
 					item.drawRect(0, 0, w, h);
 					item.endFill();
 
-					hierarchy.set(entry.link, item);
-					childrens.set(entry.name, item);
+					hierarchy.set(entry.name, item);
+					childrens.set(entry.link, item);
 
 					object = item;
 
 				case "mask" :
 					var item = new h2d.Mask(Std.int(entry.width), Std.int(entry.height));
 
-					hierarchy.set(entry.link, item);
-					childrens.set(entry.name, item);
+					hierarchy.set(entry.name, item);
+					childrens.set(entry.link, item);
 					
 					object = item;
 
@@ -296,8 +298,8 @@ class Lib {
 						item = load(path, object, entry.field);
 					}
 
-					hierarchy.set(entry.link, item);
-					childrens.set(entry.name, item);
+					hierarchy.set(entry.name, item);
+					childrens.set(entry.link, item);
 
 					object = item;
 
@@ -388,17 +390,18 @@ typedef Data = {
 	@:optional var scaleX : Float;
 	@:optional var scaleY : Float;
 	@:optional var rotation : Float;
-	@:optional var alpha : Float;
 
 	@:optional var blendMode : String;
 	@:optional var visible : Bool;
-	@:optional var smooth : Bool;
+	@:optional var alpha : Float;
 
 	@:optional var src : String;
 
 	@:optional var width : Float;
 	@:optional var height : Float;
 
+	@:optional var smooth : Bool;
+	
 	@:optional var dx : Float;
 	@:optional var dy : Float;
 
@@ -409,6 +412,7 @@ typedef Data = {
 	@:optional var speed : Int;
 	@:optional var loop : Bool;
 
+	@:optional var data : String;
 	@:optional var text : String;
 	@:optional var atlas : String;
 	@:optional var font : String;
