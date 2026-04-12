@@ -69,6 +69,20 @@ class Lib {
 
 
 	/**
+		Animation
+	**/
+	public static function animate(path:String, ?parent:h2d.Object, ?field:Array<Field>):Animation {
+		var prefab = new Animation(parent);
+
+		prefab.hierarchy = get(path, prefab, field);
+		prefab.animation = Animation.from(path, prefab);
+		prefab.name = getName(path);
+
+		return prefab;
+	}
+
+
+	/**
 		Get json `Data` of the Prefab with the given name `path` from the `res` folder.
 
 		@param path Prefab name.
@@ -385,6 +399,9 @@ typedef Data = {
 	@:optional var field : Array<Field>;
 	@:optional var filter : Array<Entry>;
 
+	@:optional var animation : Array<Keyframe>;
+	@:optional var events : Array<Keyframe>;
+
 	@:optional var x : Float;
 	@:optional var y : Float;
 	@:optional var scaleX : Float;
@@ -409,7 +426,8 @@ typedef Data = {
 	@:optional var align : Int;
 	@:optional var range : Int;
 
-	@:optional var speed : Int;
+	@:optional var duration : Float;
+	@:optional var speed : Float;
 	@:optional var loop : Bool;
 
 	@:optional var data : String;
@@ -421,4 +439,16 @@ typedef Data = {
 	@:optional var body : Int;
 	@:optional var shape : Int;
 	@:optional var mode : Int;
+}
+
+typedef Keyframe = {
+	var name : String;
+
+	@:optional var type : String;
+	@:optional var ease : String;
+
+	@:optional var from : Float;
+	@:optional var to : Float;
+	@:optional var start : Float;
+	@:optional var end : Float;
 }
