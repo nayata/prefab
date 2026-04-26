@@ -30,9 +30,6 @@ class Prefab extends h2d.Object {
 	public function update(dt:Float) {}
 
 
-	public function event(n:String) {}
-
-
 	/**
 		Get an object from the prefab hierarchy by name.
 
