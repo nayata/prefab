@@ -310,6 +310,19 @@ class Lib {
 					
 					object = item;
 
+				case "flow" :
+					var item = new h2d.Flow();
+
+					item.layout = haxe.EnumTools.createByIndex(h2d.Flow.FlowLayout, entry.mode);
+					item.horizontalSpacing = Std.int(entry.dx);
+					item.verticalSpacing = Std.int(entry.dy);
+					item.padding = entry.padding;
+
+					hierarchy.set(entry.name, item);
+					childrens.set(entry.link, item);
+					
+					object = item;
+
 				case "prefab" :
 					if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find Prefab file " + entry.src);
 
