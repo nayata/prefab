@@ -120,20 +120,6 @@ class Lib {
 
 					object = item;
 
-				case "layout" :
-					var item = new Layout();
-
-					item.width = Std.int(entry.width);
-					item.height = Std.int(entry.height);
-
-					item.clipping = entry.clipping ?? false;
-					item.padding = entry.padding ?? 0;
-
-					hierarchy.set(entry.name, item);
-					childrens.set(entry.link, item);
-
-					object = item;
-
 				case "bitmap" :
 					var tile:h2d.Tile;
 
