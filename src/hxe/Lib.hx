@@ -226,11 +226,21 @@ class Lib {
 
 					if (entry.font != null) {
 						if (!hxd.res.Loader.currentInstance.exists(entry.src)) throw("Could not find Font file " + entry.src);
-						font = hxd.Res.load(entry.src).to(hxd.res.BitmapFont).toFont();
+					
+						var res = hxd.Res.load(entry.src).to(hxd.res.BitmapFont);
+						font = switch (entry.mode ?? 0) {
+							case 1: res.toSdfFont(entry.size, MultiChannel);
+							case 2: res.toSdfFont(entry.size, Alpha);
+							default: res.toFont();
+						}
 					}
-
+					
+					if (entry.size != null && entry.size != font.size) {
+						font = font.clone();
+						font.resizeTo(entry.size);
+					}
+					
 					var item = new h2d.Text(font);
-					item.smooth = true;
 
 					if (entry.color != null) item.textColor = entry.color;
 					if (entry.width != null) item.letterSpacing = entry.width;
@@ -245,6 +255,7 @@ class Lib {
 						}
 					}
 
+					item.smooth = entry.smooth ?? true;
 					item.text = entry.text ?? "";
 
 					// Override text with a value from the field
@@ -438,6 +449,7 @@ typedef Data = {
 	@:optional var color : Int;
 	@:optional var align : Int;
 	@:optional var range : Int;
+	@:optional var size : Int;
 
 	@:optional var clipping : Bool;
 	@:optional var padding : Int;
